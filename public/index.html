@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTV TECH - Công Ty Thiết Kế Web Apps & Mobile Apps Chuyên Nghiệp</title>
+  
+  <!-- Tailwind CSS & React & Lucide Icons CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass-effect {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 antialiased selection:bg-blue-600 selection:text-white">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('home');
+      const [isDarkMode, setIsDarkMode] = useState(true);
+      const [projectType, setProjectType] = useState('web_app');
+      const [screens, setScreens] = useState(8);
+      const [selectedFeatures, setSelectedFeatures] = useState(['auth', 'admin', 'payment']);
+      const [estimateResult, setEstimateResult] = useState(32000000);
+      const [selectedProjectModal, setSelectedProjectModal] = useState(null);
+      const [showQuoteModal, setShowQuoteModal] = useState(false);
+      const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', note: '' });
+      const [statusMsg, setStatusMsg] = useState('');
+
+      // Cập nhật Dark/Light mode
+      useEffect(() => {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDarkMode]);
+
+      // Tính chi phí thời gian thực
+      useEffect(() => {
+        let base = 12000000;
+        if (projectType === 'mobile_app') base = 20000000;
+        if (projectType === 'ecommerce') base = 18000000;
+        if (projectType === 'enterprise') base = 35000000;
+
+        const total = base + (screens * 1200000) + (selectedFeatures.length * 3500000);
+        setEstimateResult(total);
+      }, [projectType, screens, selectedFeatures]);
+
+      const toggleFeature = (id) => {
+        if (selectedFeatures.includes(id)) {
+          setSelectedFeatures(selectedFeatures.filter(f => f !== id));
+        } else {
+          setSelectedFeatures([...selectedFeatures, id]);
+        }
+      };
+
+      const handleSubmitContact = async (e) => {
+        e.preventDefault();
+        setStatusMsg('Đang gửi...');
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...contactForm,
+              projectType,
+              budget: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(estimateResult)
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setStatusMsg('✅ ' + data.message);
+            setContactForm({ name: '', phone: '', email: '', note: '' });
+            setTimeout(() => setShowQuoteModal(false), 2000);
+          } else {
+            setStatusMsg('❌ ' + data.message);
+          }
+        } catch (err) {
+          setStatusMsg('❌ Đã xảy ra lỗi.');
+        }
+      };
+
+      // Dữ liệu dự án
+      const projects = [
+        { id: 1, title: 'Hệ Thống Quản Lý Kho & Logistics PTV', cat: 'web_app', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', desc: 'Nền tảng Web App theo dõi realtime hàng tồn kho, điều phối vận tải tự động.' },
+        { id: 2, title: 'Ứng Dụng Đặt Lịch & Y Tế Sức Khỏe', cat: 'mobile_app', img: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80', desc: 'App iOS/Android kết nối bác sĩ, tư vấn từ xa và thanh toán qua VNPay/MoMo.' },
+        { id: 3, title: 'Sàn Thương Mại Điện Tử Nông Sản Việt', cat: 'ecommerce', img: 'https://images.unsplash.com/photo-1556742049-0a67423d242c?auto=format&fit=crop&w=800&q=80', desc: 'Website thương mại điện tử tích hợp quản lý kho đa chi nhánh và AI đề xuất sản phẩm.' }
+      ];
+
+      return (
+        <div class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+          
+          {/* HEADER / NAVIGATION */}
+          <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+              <div class="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/30">
+                  PTV
+                </div>
+                <div>
+                  <span class="text-xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-blue-400 bg-clip-text text-transparent">PTV TECH</span>
+                  <p class="text-[10px] text-blue-400 tracking-widest font-bold uppercase">Web & Mobile Apps</p>
+                </div>
+              </div>
+
+              <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold">
+                <button onClick={() => setActiveTab('home')} class={`transition ${activeTab === 'home' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Trang Chủ</button>
+                <button onClick={() => setActiveTab('about')} class={`transition ${activeTab === 'about' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Giới Thiệu</button>
+                <button onClick={() => setActiveTab('services')} class={`transition ${activeTab === 'services' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Dịch Vụ</button>
+                <button onClick={() => setActiveTab('estimator')} class={`transition ${activeTab === 'estimator' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Tính Báo Giá</button>
+                <button onClick={() => setActiveTab('portfolio')} class={`transition ${activeTab === 'portfolio' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Dự Án</button>
+                <button onClick={() => setActiveTab('pricing')} class={`transition ${activeTab === 'pricing' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Bảng Giá</button>
+                <button onClick={() => setActiveTab('contact')} class={`transition ${activeTab === 'contact' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}>Liên Hệ</button>
+              </nav>
+
+              <div class="flex items-center space-x-3">
+                <button onClick={() => setShowQuoteModal(true)} class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition text-sm">
+                  Yêu Cầu Báo Giá
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN CONTENT */}
+          <main class="flex-1">
+            
+            {/* TRANG CHỦ */}
+            {activeTab === 'home' && (
+              <div>
+                {/* Hero */}
+                <section class="relative py-24 overflow-hidden border-b border-slate-800">
+                  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-slate-950"></div>
+                  <div class="max-w-7xl mx-auto px-4 relative text-center">
+                    <span class="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold text-xs mb-6 uppercase tracking-wider">
+                      ⚡ Giải Pháp Công Nghệ Đột Phá 2026
+                    </span>
+                    <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight">
+                      Thiết Kế <span class="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Web Apps & Mobile Apps</span> Chuyên Nghiệp Dành Cho Doanh Nghiệp
+                    </h1>
+                    <p class="mt-6 text-lg text-slate-400 max-w-2xl mx-auto">
+                      PTV TECH chuyên tư vấn và phát triển hệ thống Web App, App Di Động chuẩn UI/UX, tích hợp AI Agent, bảo mật cao và vận hành tối ưu.
+                    </p>
+                    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                      <button onClick={() => setActiveTab('estimator')} class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-8 py-4 rounded-xl shadow-xl shadow-blue-500/25 transition">
+                        Tính Chi Phí Dự Án Nhanh
+                      </button>
+                      <button onClick={() => setActiveTab('portfolio')} class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-8 py-4 rounded-xl border border-slate-700 transition">
+                        Xem Sản Phẩm Thực Tế
+                      </button>
+                    </div>
+
+                    {/* Stats */}
+                    <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-slate-800/80 pt-12">
+                      <div><p class="text-3xl font-black text-white">150+</p><p class="text-xs text-slate-400 mt-1">Dự Án Hoàn Thành</p></div>
+                      <div><p class="text-3xl font-black text-blue-400">99%</p><p class="text-xs text-slate-400 mt-1">Khách Hàng Hài Lòng</p></div>
+                      <div><p class="text-3xl font-black text-white">24/7</p><p class="text-xs text-slate-400 mt-1">Hỗ Trợ Kỹ Thuật</p></div>
+                      <div><p class="text-3xl font-black text-blue-400">8+ Năm</p><p class="text-xs text-slate-400 mt-1">Kinh Nghiệm Chuyên Sâu</p></div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Core Technologies */}
+                <section class="py-16 bg-slate-900/50 border-b border-slate-800">
+                  <div class="max-w-7xl mx-auto px-4 text-center">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">Công Nghệ Cốt Lõi Chúng Tôi Sử Dụng</p>
+                    <div class="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-70">
+                      <span class="text-lg font-bold text-slate-300"><i class="fa-brands fa-react text-blue-400 mr-2"></i>React & Next.js</span>
+                      <span class="text-lg font-bold text-slate-300"><i class="fa-brands fa-node-js text-green-500 mr-2"></i>Node.js & Express</span>
+                      <span class="text-lg font-bold text-slate-300"><i class="fa-brands fa-python text-yellow-400 mr-2"></i>Python & AI Models</span>
+                      <span class="text-lg font-bold text-slate-300"><i class="fa-brands fa-aws text-orange-400 mr-2"></i>AWS & Cloud</span>
+                      <span class="text-lg font-bold text-slate-300"><i class="fa-solid fa-database text-indigo-400 mr-2"></i>MongoDB & Postgres</span>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Quick Services */}
+                <section class="py-20 max-w-7xl mx-auto px-4">
+                  <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-white">Dịch Vụ Trọng Tâm Tại PTV TECH</h2>
+                    <p class="text-slate-400 mt-2">Cung cấp toàn diện giải pháp chuyển đổi số cho mọi quy mô doanh nghiệp</p>
+                  </div>
+                  <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition">
+                      <div class="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center text-blue-400 text-xl font-bold mb-6"><i class="fa-solid fa-code"></i></div>
+                      <h3 class="text-xl font-bold text-white mb-3">Phát Triển Web Apps</h3>
+                      <p class="text-slate-400 text-sm leading-relaxed">Xây dựng hệ thống quản trị CRM, ERP, Dashboard phân tích dữ liệu, ứng dụng quản lý doanh nghiệp tùy biến cao.</p>
+                    </div>
+                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition">
+                      <div class="w-12 h-12 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold mb-6"><i class="fa-solid fa-mobile-screen"></i></div>
+                      <h3 class="text-xl font-bold text-white mb-3">Mobile App (iOS / Android)</h3>
+                      <p class="text-slate-400 text-sm leading-relaxed">Phát triển ứng dụng di động đa nền tảng React Native / Flutter, hiệu năng cao, trải nghiệm người dùng mượt mượt.</p>
+                    </div>
+                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition">
+                      <div class="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center text-purple-400 text-xl font-bold mb-6"><i class="fa-solid fa-robot"></i></div>
+                      <h3 class="text-xl font-bold text-white mb-3">Tích Hợp AI & Automation</h3>
+                      <p class="text-slate-400 text-sm leading-relaxed">Tích hợp Chatbot AI Agent, tự động hóa quy trình nghiệp vụ (RPA) giúp tiết kiệm 70% thời gian vận hành.</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* TRANG GIỚI THIỆU */}
+            {activeTab === 'about' && (
+              <section class="py-20 max-w-5xl mx-auto px-4">
+                <div class="text-center mb-12">
+                  <h2 class="text-3xl font-extrabold text-white">Về Chúng Tôi - PTV TECH</h2>
+                  <p class="text-slate-400 mt-2">Đối tác tin cậy phát triển phần mềm và ứng dụng số hóa hàng đầu</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-10 items-center">
+                  <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                    <p>CÔNG TY THIẾT KẾ PTV được thành lập với mục tiêu mang đến cho các doanh nghiệp Việt Nam và quốc tế những giải pháp phần mềm chất lượng cao, thiết kế chuẩn mực và tối ưu chi phí.</p>
+                    <p>Với đội ngũ kỹ sư phần mềm hơn 8 năm kinh nghiệm, chúng tôi không chỉ làm theo yêu cầu mà còn tư vấn chuyên sâu về kiến trúc hệ thống, trải nghiệm người dùng (UX) và lộ trình mở rộng quy mô (Scalability).</p>
+                    <div class="pt-4 border-t border-slate-800">
+                      <h4 class="font-bold text-white text-base">Sứ Mệnh</h4>
+                      <p class="text-slate-400 mt-1">Biến mọi ý tưởng kinh doanh của khách hàng thành sản phẩm công nghệ hoàn hảo, tăng tốc doanh thu và khả năng cạnh tranh.</p>
+                    </div>
+                  </div>
+                  <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 class="font-bold text-white text-lg mb-4">Giá Trị Cốt Lõi</h3>
+                    <ul class="space-y-3 text-sm text-slate-300">
+                      <li class="flex items-center"><i class="fa-solid fa-circle-check text-blue-400 mr-3"></i> Chất Lượng Chuẩn Quốc Tế</li>
+                      <li class="flex items-center"><i class="fa-solid fa-circle-check text-blue-400 mr-3"></i> Bảo Mật Dữ Liệu Tuyệt Đối</li>
+                      <li class="flex items-center"><i class="fa-solid fa-circle-check text-blue-400 mr-3"></i> Đúng Tiến Độ Bàn Giao</li>
+                      <li class="flex items-center"><i class="fa-solid fa-circle-check text-blue-400 mr-3"></i> Đồng Hành 24/7 Trọn Đời</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* TRANG DỊCH VỤ */}
+            {activeTab === 'services' && (
+              <section class="py-20 max-w-6xl mx-auto px-4">
+                <div class="text-center mb-16">
+                  <h2 class="text-3xl font-bold text-white">Các Gói Dịch Vụ Chuyên Sâu</h2>
+                  <p class="text-slate-400 mt-2">Thiết kế tùy chỉnh theo đúng nhu cầu thực tế của từng ngành nghề</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                  <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">1. Web Application Doanh Nghiệp</h3>
+                    <p class="text-slate-400 text-sm mb-4">Xây dựng ứng dụng web chạy trực tiếp trên trình duyệt, quản lý dữ liệu tập trung, phân quyền tài khoản chi tiết.</p>
+                    <ul class="text-xs text-slate-300 space-y-2">
+                      <li>• CRM quản lý khách hàng</li>
+                      <li>• ERP quản lý nhân sự & tài chính</li>
+                      <li>• Báo cáo BI & Biểu đồ phân tích</li>
+                    </ul>
+                  </div>
+                  <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 class="text-xl font-bold text-indigo-400 mb-2">2. Mobile App iOS / Android</h3>
+                    <p class="text-slate-400 text-sm mb-4">Phát triển app di động chuẩn Google Play & App Store, tích hợp Push Notification, bản đồ GPS và thanh toán.</p>
+                    <ul class="text-xs text-slate-300 space-y-2">
+                      <li>• App đặt lịch & tích điểm thành viên</li>
+                      <li>• App giao nhận hàng & theo dõi đơn</li>
+                      <li>• App mạng xã hội & kết nối nội bộ</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* TRANG BỘ TÍNH CHI PHÍ (ESTIMATOR) */}
+            {activeTab === 'estimator' && (
+              <section class="py-16 max-w-5xl mx-auto px-4">
+                <div class="text-center mb-12">
+                  <h2 class="text-3xl font-bold text-white">Công Cụ Báo Giá Tự Động</h2>
+                  <p class="text-slate-400 mt-2">Lựa chọn quy mô để có báo giá chính xác nhất trong 1 phút</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                  <div class="md:col-span-2 space-y-8 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                      <label class="block text-sm font-semibold text-slate-300 mb-3">1. Loại Hình Sản Phẩm</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        {[
+                          { id: 'web_app', name: 'Web Application' },
+                          { id: 'mobile_app', name: 'Mobile App (iOS/Android)' },
+                          { id: 'ecommerce', name: 'Sàn Thương Mại Điện Tử' },
+                          { id: 'enterprise', name: 'Hệ Thống Enterprise/ERP' }
+                        ].map(item => (
+                          <button 
+                            key={item.id}
+                            onClick={() => setProjectType(item.id)}
+                            class={`p-3 rounded-xl border text-sm font-medium text-left transition ${projectType === item.id ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-600'}`}
+                          >
+                            {item.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-slate-300">2. Số Màn Hình / Quy Mô Trang</label>
+                        <span class="text-blue-400 font-bold text-lg">{screens} Màn hình</span>
+                      </div>
+                      <input 
+                        type="range" min="1" max="30" value={screens} 
+                        onChange={(e) => setScreens(Number(e.target.value))}
+                        class="w-full accent-blue-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-semibold text-slate-300 mb-3">3. Tích Hợp Tính Năng Nâng Cao</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        {[
+                          { id: 'auth', name: 'Đăng Nhập / Phân Quyền User' },
+                          { id: 'payment', name: 'Thanh Toán Online (VNPay/MoMo)' },
+                          { id: 'chat', name: 'Chat Realtime & Notification' },
+                          { id: 'ai', name: 'Tích Hợp AI Agent / ChatGPT' },
+                          { id: 'admin', name: 'Trang Admin / CMS Quản Trị' },
+                          { id: 'multilang', name: 'Đa Ngôn Ngữ' }
+                        ].map(feat => (
+                          <label key={feat.id} class="flex items-center space-x-3 p-3 bg-slate-800/40 rounded-xl border border-slate-700/60 cursor-pointer hover:bg-slate-800/80">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedFeatures.includes(feat.id)}
+                              onChange={() => toggleFeature(feat.id)}
+                              class="w-4 h-4 text-blue-600 rounded bg-slate-900 border-slate-700 focus:ring-blue-500"
+                            />
+                            <span class="text-xs font-medium text-slate-300">{feat.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gradient-to-b from-blue-900/30 to-slate-900 p-6 rounded-2xl border border-blue-500/30 flex flex-col justify-between">
+                    <div>
+                      <h3 class="text-lg font-bold text-white mb-1">Chi Phí Dự Kiến</h3>
+                      <p class="text-xs text-slate-400 mb-4">Cam kết không phát sinh chi phí ngoài hợp đồng.</p>
+                      
+                      <div class="text-3xl font-extrabold text-blue-400 my-4">
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(estimateResult)}
+                      </div>
+
+                      <button onClick={() => setShowQuoteModal(true)} class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition mt-4">
+                        Gửi Yêu Cầu Báo Giá Này
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* TRANG DỰ ÁN (PORTFOLIO) */}
+            {activeTab === 'portfolio' && (
+              <section class="py-20 max-w-6xl mx-auto px-4">
+                <div class="text-center mb-16">
+                  <h2 class="text-3xl font-bold text-white">Dự Án Tiêu Biểu</h2>
+                  <p class="text-slate-400 mt-2">Một số sản phẩm thực tế PTV TECH đã triển khai cho khách hàng</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                  {projects.map(p => (
+                    <div key={p.id} class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-blue-500/50 transition flex flex-col">
+                      <img src={p.img} alt={p.title} class="h-48 w-full object-cover" />
+                      <div class="p-6 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{p.cat}</span>
+                          <h3 class="text-lg font-bold text-white mt-1 mb-2">{p.title}</h3>
+                          <p class="text-slate-400 text-xs leading-relaxed">{p.desc}</p>
+                        </div>
+                        <button onClick={() => setSelectedProjectModal(p)} class="mt-6 text-xs font-bold text-blue-400 hover:text-blue-300 text-left">
+                          Xem Chi Tiết Dự Án $\rightarrow$
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* TRANG BẢNG GIÁ */}
+            {activeTab === 'pricing' && (
+              <section class="py-20 max-w-6xl mx-auto px-4">
+                <div class="text-center mb-16">
+                  <h2 class="text-3xl font-bold text-white">Bảng Giá Gói Dịch Vụ</h2>
+                  <p class="text-slate-400 mt-2">Lựa chọn gói phát triển phù hợp với mức ngân sách của bạn</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                  <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 class="text-xl font-bold text-white mb-2">Gói Starter</h3>
+                    <p class="text-3xl font-black text-blue-400 my-4">15.000.000đ</p>
+                    <p class="text-xs text-slate-400 mb-6">Phù hợp cho cửa hàng & doanh nghiệp nhỏ</p>
+                    <ul class="text-xs text-slate-300 space-y-3 border-t border-slate-800 pt-6">
+                      <li>• Tối đa 5-8 màn hình giao diện</li>
+                      <li>• Thiết kế chuẩn Responsive Mobile</li>
+                      <li>• Trang Admin quản trị cơ bản</li>
+                      <li>• Bảo hành 12 tháng</li>
+                    </ul>
+                  </div>
+                  <div class="bg-gradient-to-b from-blue-900/40 to-slate-900 p-8 rounded-2xl border border-blue-500/50 relative">
+                    <span class="absolute -top-3 right-6 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Phổ Biến Nhất</span>
+                    <h3 class="text-xl font-bold text-white mb-2">Gói Pro</h3>
+                    <p class="text-3xl font-black text-blue-400 my-4">35.000.000đ</p>
+                    <p class="text-xs text-slate-400 mb-6">Dành cho Web App / Mobile App chuyên sâu</p>
+                    <ul class="text-xs text-slate-300 space-y-3 border-t border-slate-800 pt-6">
+                      <li>• Tối đa 15-20 màn hình UI/UX cao cấp</li>
+                      <li>• Tích hợp Thanh toán & Realtime Chat</li>
+                      <li>• Tối ưu tốc độ & SEO / ASO</li>
+                      <li>• Bảo hành & Hỗ trợ 24/7</li>
+                    </ul>
+                  </div>
+                  <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 class="text-xl font-bold text-white mb-2">Gói Enterprise</h3>
+                    <p class="text-3xl font-black text-blue-400 my-4">Liên Hệ</p>
+                    <p class="text-xs text-slate-400 mb-6">Hệ thống ERP / AI Agent quy mô lớn</p>
+                    <ul class="text-xs text-slate-300 space-y-3 border-t border-slate-800 pt-6">
+                      <li>• Không giới hạn tính năng tùy biến</li>
+                      <li>• Tích hợp AI Model & Hạ tầng Cloud</li>
+                      <li>• Cam kết SLA 99.9% uptime</li>
+                      <li>• Đội ngũ Dev hỗ trợ riêng</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* TRANG LIÊN HỆ */}
+            {activeTab === 'contact' && (
+              <section class="py-20 max-w-4xl mx-auto px-4">
+                <div class="text-center mb-12">
+                  <h2 class="text-3xl font-bold text-white">Liên Hệ Với PTV TECH</h2>
+                  <p class="text-slate-400 mt-2">Chúng tôi luôn sẵn sàng lắng nghe và tư vấn miễn phí cho bạn</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                  <div class="space-y-6">
+                    <h3 class="text-lg font-bold text-white">Thông Tin Trụ Sở</h3>
+                    <div class="text-sm text-slate-300 space-y-3">
+                      <p><i class="fa-solid fa-location-dot text-blue-400 mr-3"></i> Địa chỉ: Quy Nhơn, Gia Lai, Việt Nam</p>
+                      <p><i class="fa-solid fa-phone text-blue-400 mr-3"></i> Hotline/Zalo: 0368 706 911</p>
+                      <p><i class="fa-solid fa-envelope text-blue-400 mr-3"></i> Email: phanvu02012024@gamil.com</p>
+                      <p><i class="fa-solid fa-clock text-blue-400 mr-3"></i> Giờ làm việc: 8:00 - 18:00 (Thứ 2 - Thứ 7)</p>
+                    </div>
+                  </div>
+                  <form onSubmit={handleSubmitContact} class="space-y-4">
+                    <input 
+                      type="text" placeholder="Họ và tên *" required value={contactForm.name}
+                      onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
+                      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    />
+                    <input 
+                      type="text" placeholder="Số điện thoại / Zalo *" required value={contactForm.phone}
+                      onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    />
+                    <textarea 
+                      placeholder="Mô tả sơ lược yêu cầu của bạn..." rows="3" value={contactForm.note}
+                      onChange={(e) => setContactForm({...contactForm, note: e.target.value})}
+                      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    ></textarea>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition">
+                      Gửi Tin Nhắn
+                    </button>
+                    {statusMsg && <p class="text-xs text-center font-semibold text-blue-300">{statusMsg}</p>}
+                  </form>
+                </div>
+              </section>
+            )}
+
+          </main>
+
+          {/* MODAL CHI TIẾT DỰ ÁN */}
+          {selectedProjectModal && (
+            <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 relative">
+                <button onClick={() => setSelectedProjectModal(null)} class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✕</button>
+                <img src={selectedProjectModal.img} class="w-full h-48 object-cover rounded-xl mb-4" />
+                <h3 class="text-xl font-bold text-white mb-2">{selectedProjectModal.title}</h3>
+                <p class="text-slate-300 text-sm leading-relaxed mb-6">{selectedProjectModal.desc}</p>
+                <button onClick={() => setSelectedProjectModal(null)} class="w-full bg-slate-800 text-white py-2.5 rounded-xl text-sm font-bold">Đóng Cửa Sổ</button>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL YÊU CẦU BÁO GIÁ */}
+          {showQuoteModal && (
+            <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 relative">
+                <button onClick={() => setShowQuoteModal(false)} class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✕</button>
+                <h3 class="text-xl font-bold text-white mb-1">Đăng Ký Nhận Báo Giá</h3>
+                <p class="text-xs text-slate-400 mb-6">Để lại thông tin, chuyên viên PTV TECH sẽ liên hệ tư vấn trong 15 phút.</p>
+                
+                <form onSubmit={handleSubmitContact} class="space-y-4">
+                  <input 
+                    type="text" placeholder="Họ và tên *" required value={contactForm.name}
+                    onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                  <input 
+                    type="text" placeholder="Số điện thoại / Zalo *" required value={contactForm.phone}
+                    onChange={(e) => setContactForm({...contactForm, phone: e.target.value})}
+                    class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  />
+                  <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition">
+                    Xác Nhận Gửi Yêu Cầu
+                  </button>
+                  {statusMsg && <p class="text-xs text-center font-semibold text-blue-300">{statusMsg}</p>}
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer class="bg-slate-900 border-t border-slate-800 py-10 mt-12">
+            <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs space-y-2">
+              <p>© 2026 CÔNG TY THIẾT KẾ PTV - WEB APPS. All rights reserved.</p>
+              <p>Địa chỉ: Quy Nhơn, Gia Lai, Việt Nam | Hotline: 0368 706 911</p>
+              </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
